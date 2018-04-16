@@ -1,4 +1,4 @@
-function state_out = runEKF(imuStruct,gpsStruct, state0, RBI0, P0)
+function state_out = runEKF(imuStruct,gpsStruct, state0, RBI0, P0, systemParams)
 
 state_out=[];
 

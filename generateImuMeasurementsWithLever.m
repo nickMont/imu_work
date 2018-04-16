@@ -8,7 +8,7 @@ if tfracf<tfrac0 %handles wraparound
     tfracf=tfracf+1;
 end
 imutimer=0:1/fimu:2;  %imu has true time twhole+imutimer(timeIndex)
-timu_ind=find(imutimer<=(tfracf-1e-7) & imutimer>=(tfrac0+1e-7));
+timu_ind=find(imutimer>=(tfrac0-1e-7) & imutimer<=(tfracf+1e-7));
 imuMeas={}; %cell array of 7x1 measurements, where 1->time, 2:7->meas
 cholR=chol(Rimu);
 

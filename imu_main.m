@@ -18,6 +18,7 @@ antenna2_loc = [-1;0;0];
 % Before subsampling
 thist0=0:1/fgps:20;
 N0=length(thist0);
+N0=3;
 xhist_init=zeros(401,3);  %position hist in inertial frame
 xhist_init(:,1)=sin(thist0);
 ehist_init=zeros(401,3);  %attitude hist for 312 convention
@@ -73,16 +74,15 @@ for ij=2:N0
     z1 = xhist_init(ij,:)' + cholR1*randn(3,1);
     z2 = xhist_init(ij,:)' + cholR2*randn(3,1)+...
         calculate_R_from_euler(ehist_init(ij,:))*antenna2_loc;
-    gpsMeas = {[thist0(ij);z1;z2]};
+    gpsMeas = {[thist0(ij);z1;z1-z2]};
     gpsMeasStore{ij-1}=gpsMeas;
     
-%     for ik=1:5
-%         iI=(ij-2)*fratio+ik;
-%         zImu(1)=thist(iI);
-%         imuMeas{ik}=zIImu;
-%     end
-    t_ode=[thist((ij-2)*fratio+1) : 1/fimu : thist((ij-2)*fratio+fratio+1)];
-    %t_ode=[thist((ij-2)*fratio+1) thist((ij-2)*fratio+fratio+1)];
+    % %Specify times for measurement       
+    %t_ode=[thist((ij-2)*fratio+1) : 1/fimu : thist((ij-2)*fratio+fratio+1)];
+    % Specify start and end times and let generateImuMeasurements sort it
+    t_ode=[thist((ij-2)*fratio+1) thist((ij-2)*fratio+fratio+1)];
+    
+    % Grab imu measurements
     [imuMeas,imuInternalState]=generateImuMeasurementsWithLever(Rimu,...
         imuInternalState, t_ode, fimu, imuConsts, thist, statehist, Lab_true);
     %imuMeas{1}

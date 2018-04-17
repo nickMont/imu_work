@@ -1,6 +1,7 @@
-function state_out = runEKF(imuStruct,gpsStruct, state0, RBI0, P0, systemParams)
+function [state_out,P_out,RBI_out,Limu_out] = runEKF(imuStruct,gpsStruct, state0, RBI0, P0, systemParams)
 
 state_out=[];
+P_out=[];
 
 persistent state Pk RBI tLast Limu
 if isempty(state)
@@ -18,6 +19,9 @@ if ~isempty(gpsStruct)
 end
 
 state_out=state;
+P_out=Pk;
+RBI_out=RBI;
+Limu_out=Limu;
 
 end
 

@@ -18,7 +18,6 @@ P_aug = blkdiag(Pbar,Rk);
 Sk_aug = chol(P_aug)';
 
 % Propagate regression points
-sp0 = xHatAugk;
 zpMat = zeros(nz,1+2*(nx+nw));
 zpMat(:,1) = h_imu_meas(xhat_aug(1:nx),RBI0,xhat_aug(nx+1:end),Lcg2p,Ls2p);
 zbar = zpMat(:,1)*w_mean_center;
@@ -30,7 +29,7 @@ for ij=1:2*(nx+nw)
     if(ij > (nx + nw))
         sgn = -1;
     end
-    xaug_ij = sp0 + sgn*c_p*Sk_aug(:,colno);
+    xaug_ij = xhat_aug + sgn*c_p*Sk_aug(:,colno);
     xpMat(:,ij+1) = xaug_ij(1:nx);
     zpMat(:,ij+1) = h_imu_meas(xaug_ij(1:nx),RBI0,xaug_ij(nx+1:end),Lcg2p,Ls2p);
     zbar = zbar + w_mean_reg*zpMat(:,ij+1);

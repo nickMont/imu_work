@@ -1,9 +1,7 @@
-function state_out = runUKF(imuStruct,gpsStruct, state0, RBI0, P0)
-
-
-%Qimu=diag([10^-3*ones(3,1); 10^-7*ones(3,1); 10^-3*ones(3,1); 10^-8*ones(3,1)]);
+function [state_out,P_out,RBI_out,Limu_out] = runUKF(imuStruct,gpsStruct, state0, RBI0, P0, systemParams)
 
 state_out=[];
+P_out=[];
 
 persistent state Pk RBI tLast Limu
 if isempty(state)
@@ -17,10 +15,13 @@ end
 if ~isempty(gpsStruct)
     dtt = gpsStruct{1}(1)-tLast;
     tLast = gpsStruct{1}(1);
-   [state,Pk,RBI,Limu] = ukfUnknownLever(x0,Pk,imuStruct,gpsStruct,state,Limu,systemParams,RBI);
+   [state,Pk,RBI,Limu] = ukfUnknownLever(state,Pk,imuStruct,gpsStruct,Limu,systemParams,RBI);
 end
 
 state_out=state;
+P_out=Pk;
+RBI_out=RBI;
+Limu_out=Limu;
 
 end
 

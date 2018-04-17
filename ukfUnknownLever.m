@@ -22,23 +22,27 @@ timeVec(end)=gpsMeas{1}(1);
 
 L_s2p=systemParams.Ls2p;
 L_cg2p=systemParams.Lcg2p;
-alphaA=systemParams.alphaA;
-alphaG = systemParams.alphaG;
-Qimu = systemParams.Qimu;
+tauA=systemParams.tA;
+tauG = systemParams.tG;
+Qimu = systemParams.Rimu;
 Limu=L0;
 
 if numImuMeas>1
+    eye3=eye(3); zer3=zeros(3,3);
+    
     xk = x0;
     %Run CF
     RR=RBI0;
     [xk,RR,Limu]=updateRandL(xk,RR,Limu);
+    %Limu=[0;0;0];
     for i=1:numImuMeas
         dt=timeVec(i+1)-timeVec(i); %go through all imu and then gpstoimu time
         fB = imuMeas{i}(5:7);
         wB = imuMeas{i}(2:4);
         
-        [xk,Pk]=ukfPropagate(dt,xk,Pk,Qimu, RR,fB,wB,L0,alphaA,alphaG);
+        [xk,Pk]=ukfPropagate(dt,xk,Pk,Qimu, RR,fB,wB,L0,tauA,tauG);
         [xk,RR,Limu]=updateRandL(xk,RR,Limu);
+        %Limu=[0;0;0];
     end
     
     xbar=xk;
@@ -48,9 +52,9 @@ if numImuMeas>1
     %Gammak: note that accel noise enters in body, not world, frame
     
     zk=[gpsMeas{1}(2:4); unit3(gpsMeas{1}(5:7)-gpsMeas{1}(2:4))];  %pose meas in local frame
-    Rk=.02*[eye3 zer3; zer3 eye3];
+    Rk=.0002*[eye3 zer3; zer3 eye3];
     [zbar,Pxz,Pzz]=ukfMeasure(xbar,Pbar,Rk,RR,L_cg2p,L_s2p);
-    nuj=zk-zbar;
+    nuj = zk-zbar
     xkp1 = xbar+Pxz*inv(Pzz)*nuj;
     Pkp1 = Pbar - Pxz*inv(Pzz)*Pxz';
     

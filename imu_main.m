@@ -112,6 +112,7 @@ for ij=2:N0
     end
 end
 %NOTE: gpsMeasStore{1} corresponds to thist0(2)
+nmax = length(gpsMeasStore);
 
 % Match convention in f_imu_dyn
 RimuStack = blkdiag(Rimu.output(4:6,4:6),Rimu.bias(4:6,4:6),Rimu.output(1:3,1:3),Rimu.bias(1:3,1:3));
@@ -128,15 +129,25 @@ v0=vhist(1,:)';
 g0=zeros(3,1);
 ba0=zeros(3,1);
 bg0=zeros(3,1);
+
+% UKF with state augmentation
 state0=[x0;v0;g0;ba0;bg0;limu0];
 P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
     .01*ones(3,1); .01*ones(3,1); 0.1*ones(3,1)]);
-
-nmax = length(gpsMeasStore);
-%nmax=2;
 statestore=zeros(18,nmax);
+
+%15
+state0=[x0;v0;g0;ba0;bg0];
+P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
+    .01*ones(3,1); .01*ones(3,1)]);
+limu0=[-1;0;0];
+statestore=zeros(15,nmax);
+
+
+% state aug UKF
 for ij=1:nmax
-    [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams);
+    [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
+    %[state,Pk,RBI]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
     Pk=Pk+1e-10*eye(length(Pk));
     LL=Limu
     statestore(:,ij)=state;

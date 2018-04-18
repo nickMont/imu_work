@@ -3,25 +3,24 @@ function [state_out,P_out,RBI_out,Limu_out] = runEKF(imuStruct,gpsStruct, state0
 state_out=[];
 P_out=[];
 
-persistent state Pk RBI tLast Limu
+persistent state Pk RBI tLast
 if isempty(state)
     state=state0;
     RBI=RBI0;
     Pk=P0;
     tLast = 0;
-    Limu=zeros(3,1);
 end
 
 if ~isempty(gpsStruct)
     dtt = gpsStruct{1}(1)-tLast;
     tLast = gpsStruct{1}(1);
-   [state,Pk,RBI,Limu] = ekfUnknownLever(state,Pk,imuStruct,gpsStruct,Limu,systemParams,RBI);
+   [state,Pk,RBI] = ekfUnknownLever(state,Pk,imuStruct,gpsStruct,systemParams,RBI);
 end
 
 state_out=state;
 P_out=Pk;
 RBI_out=RBI;
-Limu_out=Limu;
+Limu_out=state(16:18);
 
 end
 

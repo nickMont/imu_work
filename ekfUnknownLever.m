@@ -1,4 +1,4 @@
-function [xkp1,Pkp1,RBI_out,Limu] = ekfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,systemParams,RBI0)
+function [xkp1,Pkp1,RBI_out] = ekfUnknownLever(x0,Pk,imuMeas,gpsMeas,systemParams,RBI0)
 %get all time stamps. GPS is assumed to be the last measurement in terms of
 %time
 %Sk and nuj are only used in MMKF
@@ -7,7 +7,7 @@ function [xkp1,Pkp1,RBI_out,Limu] = ekfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,sys
 
 maxLeverPossible=[1;1;1];  %change to 1e7 to ignore
 
-Sk=[]; nuj=[]; xkp1=x0; Pkp1=Pk; Limu=L0; RBI_out=RBI0;
+Sk=[]; nuj=[]; xkp1=x0; Pkp1=Pk; RBI_out=RBI0;
 
 %xState = [dP;dV;eul;bg;ba;dL];
 numImuMeas=length(imuMeas);
@@ -26,7 +26,6 @@ L_cg2p=systemParams.Lcg2p;
 tauA=systemParams.tA;
 tauG = systemParams.tG;
 
-Limu=L0;
 %Limu=[0;0;0];
 
 if numImuMeas>1
@@ -39,6 +38,7 @@ if numImuMeas>1
     %Run CF
     RR=RBI0;
     dtsum=0;
+    [xk,RR]=updateRBI(xk,RR);
     for i=1:numImuMeas
         dt=timeVec(i+1)-timeVec(i); %go through all imu and then gpstoimu time
         dtsum=dtsum+dt;
@@ -47,11 +47,11 @@ if numImuMeas>1
         fB = imuMeas{i}(5:7);
         wB = imuMeas{i}(2:4);
         
-        xk = f_imu_dyn_unknownLever(dt,xk,RR,fB,wB,zeros(12,1),tauA,tauG,L0);
-        F_local = complexStep(@(xVar) f_imu_dyn_unknownLever(dt,xVar,RR,fB,wB,zeros(12,1),tauA,tauG,Limu),xk,1e-10);
+        xk = f_imu_dyn_unknownLever(dt,xk,RR,fB,wB,zeros(12,1),tauA,tauG);
+        F_local = complexStep(@(xVar) f_imu_dyn_unknownLever(dt,xVar,RR,fB,wB,zeros(12,1),tauA,tauG),xk,1e-10);
         Ft=F_local*Ft;
-        Gt = Gt + complexStep(@(vVar) f_imu_dyn_unknownLever(dt,xk,RR,fB,wB,vVar,tauA,tauG,Limu),zeros(12,1),1e-10);
-        [xk,RR,Limu]=updateRandL(xk,RR,Limu);
+        Gt = Gt + complexStep(@(vVar) f_imu_dyn_unknownLever(dt,xk,RR,fB,wB,vVar,tauA,tauG),zeros(12,1),1e-10);
+        [xk,RR]=updateRBI(xk,RR);
         %Limu=[0;0;0];
     end
     
@@ -69,7 +69,7 @@ if numImuMeas>1
     xkp1=xbar+Wk*nuj;
     
     Pkp1 = (eye(18)-Wk*Hk)*Pbar*(eye(18)-Wk*Hk)' + Wk*Rk*Wk'; 
-    [xkp1,RBI_out,Limu]=updateRandL(xkp1,RR,Limu);
+    [xkp1,RBI_out]=updateRBI(xk,RR);
 end
 
 end

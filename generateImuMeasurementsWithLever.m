@@ -22,8 +22,8 @@ for ij=1:length(timu_ind)
     
     %propagate biases if not doubling up on time index
     if abs(tLast-thisTime)>1e-7
-        %[imuInternalState,accB,gyroB]=imuPropagateBiasesDiscreteOnebias(imuInternalState,1/fimu,imuConsts,cholRbias*randn(6,1));
-        [imuInternalState,accB,gyroB]=imuPropagateBiasesDiscreteOnebias(imuInternalState,1/fimu,imuConsts,zeros(6,1));
+        [imuInternalState,accB,gyroB]=imuPropagateBiasesDiscreteOnebias(imuInternalState,1/fimu,imuConsts,cholRbias*randn(6,1));
+        %[imuInternalState,accB,gyroB]=imuPropagateBiasesDiscreteOnebias(imuInternalState,1/fimu,imuConsts,zeros(6,1));
     else
         % %Two-state bias model
         %gyroB = imuInternalState(7:9) + imuInternalState(10:12);
@@ -50,10 +50,14 @@ for ij=1:length(timu_ind)
     outputNoise = zeros(6,1);
     %outputNoise = cholRout*randn(6,1);
     
+    alphaCrossL = cross(this_ewxv(16:18),L_ab);
+    alphaCrossL = zeros(3,1);
+    wBxwBxL = cross(wB,cross(wB,L_ab));
+    
     %combine bias and ewxvDot
     imuMeas{ij}=[thisTime;
         wB+gyroB+outputNoise(1:3);
-        RR*(this_ewxv(7:9) + grav) + accB + cross(this_ewxv(16:18),L_ab)+cross(wB,cross(wB,L_ab)) + outputNoise(4:6)];
+        RR*(this_ewxv(7:9) + grav) + accB + alphaCrossL + wBxwBxL + outputNoise(4:6)];
 end
 
 end

@@ -13,22 +13,22 @@ Rgps(:,:,1)=.0002*eye(3);
 Rgps(:,:,2)=Rgps(:,:,1);
 cholR1=chol(Rgps(:,:,1));
 cholR2=chol(Rgps(:,:,2));
-%cholR1=zeros(3,3);
-%cholR2=zeros(3,3);
+cholR1=zeros(3,3);
+cholR2=zeros(3,3);
 rs2p = [1;0;0];
 rcg2p=[0;0;0];
 
 % INS noise parameters
 
 % Before subsampling
-thist0=0:1/fgps:100;
+thist0=0:1/fgps:20;
 N0=length(thist0);
 %N0=3;
 xhist_init=zeros(N0,3);  %position hist in inertial frame
 xhist_init(:,1)=sin(thist0);
 ehist_init=zeros(N0,3);  %attitude hist for 312 convention
 ehist_init(:,1)=cos(0.5*thist0);
-ehist_init(:,3)=0.01*sin(0.1*thist0);
+ehist_init(:,3)=cos
 
 % New sampled time
 thist=(thist0(1):1/fimu:thist0(end))';
@@ -82,8 +82,7 @@ zImu=zeros(7,1);
 imuConsts=[100;100;100;100;100;100];
 Rimu.bias = diag([1000*(1/9.81*10^-6)^2*ones(3,1); 10^-8*(pi/180)^2*ones(3,1)])*fimu;
 Rimu.output = diag([(9.81/1e5/sqrt(10))^2*ones(3,1); 25*(pi/180/100)^2*ones(3,1)])*fimu;
-%imuInternalState=zeros(6,1);
-imuInternalState=(2*eye(6)-fimu*inv(diag(imuConsts)))*chol(Rimu.bias)*randn(6,1); %approximate SS from expm
+imuInternalState=zeros(6,1);
 statehist=[xhist vhist ahist ehist omegaBhist alphaBhist];
 Lab_true=[-1;0;0];
 tLast=-1;
@@ -130,7 +129,7 @@ ba0=zeros(3,1);
 bg0=zeros(3,1);
 state0=[x0;v0;g0;ba0;bg0;limu0];
 P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
-    .01*ones(3,1); .01*ones(3,1); 0.1*ones(3,1)]);
+    .01*ones(3,1); .01*ones(3,1); .1*ones(3,1)]);
 
 nmax = length(gpsMeasStore);
 %nmax=2;
@@ -141,7 +140,7 @@ for ij=1:nmax
     LL=Limu
     statestore(:,ij)=state;
     dxv=state(1:6)-[xhist_init(ij+1,:)';vhist(4*(ij-1)+1,:)']
-    %interestingStates=[state(1:6);state(10:15)]
+    interestingStates=[state(1:6);state(10:15)]
     RBI
 end
 

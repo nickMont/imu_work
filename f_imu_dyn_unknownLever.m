@@ -1,5 +1,5 @@
 function xkp1 = f_imu_dyn_unknownLever(dt, xk, RBI0, fB_meas, wB_meas, vk, ...
-    tau_accel, tau_gyro,L0)
+    tau_accel, tau_gyro)
 %xk = [rI; vI; gammak; ba; bg; rIMU];
 %vk = [gryo_output; gyro_bias; accel_output; accel_bias];
 rI = xk(1:3);
@@ -7,7 +7,7 @@ vI = xk(4:6);
 gammak = xk(7:9);
 ba = xk(10:12);
 bg = xk(13:15);
-rIMU = xk(16:18)+L0;
+rIMU = xk(16:18);
 
 RR = euler2dcm(gammak)*RBI0;
 

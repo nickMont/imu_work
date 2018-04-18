@@ -1,4 +1,4 @@
-function [xkp1,Pkp1,RBI_out,Limu] = ukfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,systemParams,RBI0)
+function [xkp1,Pkp1,RBI_out] = ukfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,systemParams,RBI0)
 %get all time stamps. GPS is assumed to be the last measurement in terms of
 %time
 %Sk and nuj are only used in MMKF
@@ -25,24 +25,21 @@ L_cg2p=systemParams.Lcg2p;
 tauA=systemParams.tA;
 tauG = systemParams.tG;
 Qimu = systemParams.Rimu;
-Limu=L0;
-
 if numImuMeas>1
     eye3=eye(3); zer3=zeros(3,3);
     
     xk = x0;
     %Run CF
     RR=RBI0;
-    [xk,RR,Limu]=updateRandL(xk,RR,Limu);
+    [xk,RR]=updateRBI(xk,RR);
     %Limu=[0;0;0];
     for i=1:numImuMeas
         dt=timeVec(i+1)-timeVec(i); %go through all imu and then gpstoimu time
         fB = imuMeas{i}(5:7);
         wB = imuMeas{i}(2:4);
         
-        [xk,Pk]=ukfPropagate(dt,xk,Pk,Qimu, RR,fB,wB,L0,tauA,tauG);
-        [xk,RR,Limu]=updateRandL(xk,RR,Limu);
-        %Limu=[0;0;0];
+        [xk,Pk]=ukfPropagate(dt,xk,Pk,Qimu, RR,fB,wB,tauA,tauG);
+        [xk,RR]=updateRBI(xk,RR);
     end
     
     xbar=xk;
@@ -60,7 +57,7 @@ if numImuMeas>1
     
     %TESTING: Saturation limit for known bounds
     %biasState(16:18) = vectorSaturationF(biasState(16:18),maxLeverPossible);
-    [xkp1,RBI_out,Limu]=updateRandL(xkp1,RR,Limu);
+    [xkp1,RBI_out]=updateRBI(xkp1,RR);
 end
 
 

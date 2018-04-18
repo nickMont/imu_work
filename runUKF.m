@@ -15,13 +15,13 @@ end
 if ~isempty(gpsStruct)
     dtt = gpsStruct{1}(1)-tLast;
     tLast = gpsStruct{1}(1);
-   [state,Pk,RBI,Limu] = ukfUnknownLever(state,Pk,imuStruct,gpsStruct,Limu,systemParams,RBI);
+   [state,Pk,RBI] = ukfUnknownLever(state,Pk,imuStruct,gpsStruct,Limu,systemParams,RBI);
 end
 
 state_out=state;
 P_out=Pk;
 RBI_out=RBI;
-Limu_out=Limu;
+Limu_out=state(16:18);
 
 end
 

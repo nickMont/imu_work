@@ -1,4 +1,4 @@
-function [xbarkp1,Pbarkp1] = ukfPropagate(dt,xk,Pk,Qk, RBI0,fB,wB,Limu0,tauA,tauG)
+function [xbarkp1,Pbarkp1] = ukfPropagate(dt,xk,Pk,Qk, RBI0,fB,wB,tauA,tauG)
 
 nx = length(xk);
 [~,nv] = size(Qk);
@@ -18,7 +18,7 @@ Sk_aug = chol(P_aug)';
 
 % Propagate regression points
 xpMat = zeros(nx,1+2*(nx+nv));
-xpMat(:,1) = f_imu_dyn_unknownLever(dt,xhat_aug(1:nx),RBI0,fB,wB,xhat_aug(nx+1:end),tauA,tauG,Limu0);
+xpMat(:,1) = f_imu_dyn_unknownLever(dt,xhat_aug(1:nx),RBI0,fB,wB,xhat_aug(nx+1:end),tauA,tauG);
 xbarkp1 = xpMat(:,1)*w_mean_center;
 sgn = 1;
 for ij=1:2*(nx+nv)
@@ -27,7 +27,7 @@ for ij=1:2*(nx+nv)
         sgn = -1;
     end
     xaug_ij = xhat_aug + sgn*c_p*Sk_aug(:,colno);
-    xpMat(:,ij+1) = f_imu_dyn_unknownLever(dt,xaug_ij(1:nx),RBI0,fB,wB,xaug_ij(nx+1:end),tauA,tauG,Limu0);
+    xpMat(:,ij+1) = f_imu_dyn_unknownLever(dt,xaug_ij(1:nx),RBI0,fB,wB,xaug_ij(nx+1:end),tauA,tauG);
     xbarkp1 = xbarkp1 + w_mean_reg*xpMat(:,ij+1);
 end
 

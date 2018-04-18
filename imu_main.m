@@ -136,26 +136,69 @@ P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
     .01*ones(3,1); .01*ones(3,1); 0.1*ones(3,1)]);
 statestore=zeros(18,nmax);
 
-%15
-state0=[x0;v0;g0;ba0;bg0];
-P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
+% %15
+% state0=[x0;v0;g0;ba0;bg0];
+% P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
+%     .01*ones(3,1); .01*ones(3,1)]);
+% limu0=[-1;0;0];
+% statestore=zeros(15,nmax);
+
+
+% % state aug UKF
+% for ij=1:nmax
+%     [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
+%     %[state,Pk,RBI]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
+%     Pk=Pk+1e-10*eye(length(Pk));
+%     LL=Limu
+%     statestore(:,ij)=state;
+%     dxv=state(1:6)-[xhist_init(ij+1,:)';vhist(4*(ij-1)+1,:)']
+%     %interestingStates=[state(1:6);state(10:15)]
+%     RBI
+% end
+
+% MMAE
+discSize=0.25;
+mu_min=1e-8;
+leverSet=permn(-2:discSize:2,3);
+numLevers=length(leverSet);
+stateSet=zeros(15,numLevers);
+PkSet=zeros(15,15,numLevers);
+lambdaTemp=zeros(numLevers,1);
+state15=[x0;v0;g0;ba0;bg0];
+P15=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
     .01*ones(3,1); .01*ones(3,1)]);
-limu0=[-1;0;0];
-statestore=zeros(15,nmax);
-
-
-% state aug UKF
-for ij=1:nmax
-    [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
-    %[state,Pk,RBI]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
-    Pk=Pk+1e-10*eye(length(Pk));
-    LL=Limu
-    statestore(:,ij)=state;
-    dxv=state(1:6)-[xhist_init(ij+1,:)';vhist(4*(ij-1)+1,:)']
-    %interestingStates=[state(1:6);state(10:15)]
-    RBI
+for ijk=1:numLevers
+    PkSet(:,:,ijk)=P15;
+    stateSet(:,ijk)=state15;
 end
-
+mukhist=zeros(numLevers,nmax);
+muPrev=ones(numLevers,1)*1/numLevers;
+for ij=1:nmax
+    tic
+    pctComplete=ij/nmax*100
+    %NOTE: Model transition probability is zero
+    for ijk=1:numLevers
+        [state,Pk,RBI,Sk_notfixed,nuj]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},stateSet(:,ijk),RBI,PkSet(:,:,ijk),systemParams,leverSet(ijk,:)');
+        stateSet(:,ijk)=state;
+        PkSet(:,:,ijk)=Pk;
+        Sk = (Sk_notfixed + Sk_notfixed.')/2; %fix numerical error caused by rounding in inv()
+        normpdf_Eval = mvnpdf(nuj,zeros(6,1),Sk);
+        lambdaTemp(ijk)=normpdf_Eval;
+    end
+    %merge to get new mus
+    muStackTemp=zeros(numLevers,1);
+    for ijk=1:numLevers
+        muStackTemp(ijk)=lambdaTemp(ijk)*muPrev(ijk)/dot(lambdaTemp,muPrev);
+    end
+    for ijk=1:numLevers
+        if muStackTemp(ijk)<=mu_min
+            muStackTemp(ijk)=mu_min;
+        end
+    end
+    muPrev=muStackTemp/sum(muStackTemp);
+    mukhist(:,ij)=muPrev;
+    t=toc
+end
 
 
 

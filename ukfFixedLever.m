@@ -1,4 +1,4 @@
-function [xkp1,Pkp1,RBI_out] = ukfFixedLever(x0,Pk,imuMeas,gpsMeas,L0,systemParams,RBI0)
+function [xkp1,Pkp1,RBI_out,Pzz,nuj] = ukfFixedLever(x0,Pk,imuMeas,gpsMeas,L0,systemParams,RBI0)
 %get all time stamps. GPS is assumed to be the last measurement in terms of
 %time
 %Sk and nuj are only used in MMKF
@@ -51,7 +51,7 @@ if numImuMeas>1
     zk=[gpsMeas{1}(2:4); unit3(gpsMeas{1}(5:7)-gpsMeas{1}(2:4))];  %pose meas in local frame
     Rk=.0002*[eye3 zer3; zer3 eye3];
     [zbar,Pxz,Pzz]=ukfMeasure(xbar,Pbar,Rk,RR,L_cg2p,L_s2p);
-    nuj = zk-zbar
+    nuj = zk-zbar;
     xkp1 = xbar+Pxz*inv(Pzz)*nuj;
     Pkp1 = Pbar - Pxz*inv(Pzz)*Pxz';
     

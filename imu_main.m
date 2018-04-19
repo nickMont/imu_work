@@ -21,14 +21,19 @@ rcg2p=[0;0;0];
 % INS noise parameters
 
 % Before subsampling
-thist0=0:1/fgps:100;
+thist0=0:1/fgps:20;
 N0=length(thist0);
 %N0=3;
 xhist_init=zeros(N0,3);  %position hist in inertial frame
 xhist_init(:,1)=sin(thist0);
+%xhist_init(:,2)=cos(0.2*thist0);
+%xhist_init(:,3)=0.1*thist0;
 ehist_init=zeros(N0,3);  %attitude hist for 312 convention
 ehist_init(:,1)=cos(0.5*thist0);
-ehist_init(:,3)=0.01*sin(0.1*thist0);
+ehist_init(:,2)=0.01*cos(0.1*thist0);
+ehist_init(:,3)=0.01*sin(0.2*thist0);
+
+Lab_true=[1;0.5;0.2];
 
 % New sampled time
 thist=(thist0(1):1/fimu:thist0(end))';
@@ -85,7 +90,6 @@ Rimu.output = diag([(9.81/1e5/sqrt(10))^2*ones(3,1); 25*(pi/180/100)^2*ones(3,1)
 %imuInternalState=zeros(6,1);
 imuInternalState=(2*eye(6)-fimu*inv(diag(imuConsts)))*chol(Rimu.bias)*randn(6,1); %approximate SS from expm
 statehist=[xhist vhist ahist ehist omegaBhist alphaBhist];
-Lab_true=[-1;0;0];
 tLast=-1;
 testmat=[];
 for ij=2:N0
@@ -133,7 +137,7 @@ bg0=zeros(3,1);
 % UKF with state augmentation
 state0=[x0;v0;g0;ba0;bg0;limu0];
 P0=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
-    .01*ones(3,1); .01*ones(3,1); 0.1*ones(3,1)]);
+    .01*ones(3,1); .01*ones(3,1); 0.05*ones(3,1)]);
 statestore=zeros(18,nmax);
 
 % %15
@@ -146,7 +150,7 @@ statestore=zeros(18,nmax);
 
 % % state aug UKF
 % for ij=1:nmax
-%     [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
+%     [state,Pk,RBI,Limu]=runUKF(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams);
 %     %[state,Pk,RBI]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},state0,RBI,P0,systemParams,limu0);
 %     Pk=Pk+1e-10*eye(length(Pk));
 %     LL=Limu
@@ -175,7 +179,7 @@ mukhist=zeros(numLevers,nmax);
 muPrev=ones(numLevers,1)*1/numLevers;
 for ij=1:nmax
     tic
-    pctComplete=ij/nmax*100
+    
     %NOTE: Model transition probability is zero
     for ijk=1:numLevers
         [state,Pk,RBI,Sk_notfixed,nuj]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},stateSet(:,ijk),RBI,PkSet(:,:,ijk),systemParams,leverSet(ijk,:)');
@@ -197,7 +201,9 @@ for ij=1:nmax
     end
     muPrev=muStackTemp/sum(muStackTemp);
     mukhist(:,ij)=muPrev;
+    
     t=toc
+    pctComplete=ij/nmax*100
 end
 
 

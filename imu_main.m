@@ -118,6 +118,19 @@ end
 %NOTE: gpsMeasStore{1} corresponds to thist0(2)
 nmax = length(gpsMeasStore);
 
+datset=[];
+datset=[datset statehist(1,:)];
+for ij=1:400
+    datset=[datset gpsMeasStore{ij}{1}'];
+end
+for ij=1:400
+    n=length(imuMeasStore{ij});
+    for iL=1:n
+        datset=[datset imuMeasStore{ij}{iL}'];
+    end
+end
+levers=Lab_true';
+
 % Match convention in f_imu_dyn
 RimuStack = blkdiag(Rimu.output(4:6,4:6),Rimu.bias(4:6,4:6),Rimu.output(1:3,1:3),Rimu.bias(1:3,1:3));
 systemParams.Rimu = RimuStack;
@@ -160,51 +173,51 @@ statestore=zeros(18,nmax);
 %     RBI
 % end
 
-% MMAE
-discSize=0.25;
-mu_min=1e-8;
-leverSet=permn(-2:discSize:2,3);
-numLevers=length(leverSet);
-stateSet=zeros(15,numLevers);
-PkSet=zeros(15,15,numLevers);
-lambdaTemp=zeros(numLevers,1);
-state15=[x0;v0;g0;ba0;bg0];
-P15=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
-    .01*ones(3,1); .01*ones(3,1)]);
-for ijk=1:numLevers
-    PkSet(:,:,ijk)=P15;
-    stateSet(:,ijk)=state15;
-end
-mukhist=zeros(numLevers,nmax);
-muPrev=ones(numLevers,1)*1/numLevers;
-for ij=1:nmax
-    tic
-    
-    %NOTE: Model transition probability is zero
-    for ijk=1:numLevers
-        [state,Pk,RBI,Sk_notfixed,nuj]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},stateSet(:,ijk),RBI,PkSet(:,:,ijk),systemParams,leverSet(ijk,:)');
-        stateSet(:,ijk)=state;
-        PkSet(:,:,ijk)=Pk;
-        Sk = (Sk_notfixed + Sk_notfixed.')/2; %fix numerical error caused by rounding in inv()
-        normpdf_Eval = mvnpdf(nuj,zeros(6,1),Sk);
-        lambdaTemp(ijk)=normpdf_Eval;
-    end
-    %merge to get new mus
-    muStackTemp=zeros(numLevers,1);
-    for ijk=1:numLevers
-        muStackTemp(ijk)=lambdaTemp(ijk)*muPrev(ijk)/dot(lambdaTemp,muPrev);
-    end
-    for ijk=1:numLevers
-        if muStackTemp(ijk)<=mu_min
-            muStackTemp(ijk)=mu_min;
-        end
-    end
-    muPrev=muStackTemp/sum(muStackTemp);
-    mukhist(:,ij)=muPrev;
-    
-    t=toc
-    pctComplete=ij/nmax*100
-end
+% % MMAE
+% discSize=0.25;
+% mu_min=1e-8;
+% leverSet=permn(-2:discSize:2,3);
+% numLevers=length(leverSet);
+% stateSet=zeros(15,numLevers);
+% PkSet=zeros(15,15,numLevers);
+% lambdaTemp=zeros(numLevers,1);
+% state15=[x0;v0;g0;ba0;bg0];
+% P15=diag([.1*ones(3,1); .01*ones(3,1); .01*ones(3,1); ...
+%     .01*ones(3,1); .01*ones(3,1)]);
+% for ijk=1:numLevers
+%     PkSet(:,:,ijk)=P15;
+%     stateSet(:,ijk)=state15;
+% end
+% mukhist=zeros(numLevers,nmax);
+% muPrev=ones(numLevers,1)*1/numLevers;
+% for ij=1:nmax
+%     tic
+%     
+%     %NOTE: Model transition probability is zero
+%     for ijk=1:numLevers
+%         [state,Pk,RBI,Sk_notfixed,nuj]=runUKF15(imuMeasStore{ij},gpsMeasStore{ij},stateSet(:,ijk),RBI,PkSet(:,:,ijk),systemParams,leverSet(ijk,:)');
+%         stateSet(:,ijk)=state;
+%         PkSet(:,:,ijk)=Pk;
+%         Sk = (Sk_notfixed + Sk_notfixed.')/2; %fix numerical error caused by rounding in inv()
+%         normpdf_Eval = mvnpdf(nuj,zeros(6,1),Sk);
+%         lambdaTemp(ijk)=normpdf_Eval;
+%     end
+%     %merge to get new mus
+%     muStackTemp=zeros(numLevers,1);
+%     for ijk=1:numLevers
+%         muStackTemp(ijk)=lambdaTemp(ijk)*muPrev(ijk)/dot(lambdaTemp,muPrev);
+%     end
+%     for ijk=1:numLevers
+%         if muStackTemp(ijk)<=mu_min
+%             muStackTemp(ijk)=mu_min;
+%         end
+%     end
+%     muPrev=muStackTemp/sum(muStackTemp);
+%     mukhist(:,ij)=muPrev;
+%     
+%     t=toc
+%     pctComplete=ij/nmax*100
+% end
 
 
 

@@ -96,3 +96,5 @@ for ij=1:nmax
     %interestingStates=[state(1:6);state(10:15)]
     RBI
 end
+
+

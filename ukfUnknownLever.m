@@ -5,7 +5,8 @@ function [xkp1,Pkp1,RBI_out] = ukfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,systemPa
 
 %gpsMeas is [t0;gps1;gps2];
 
-maxLeverPossible=[1.5;1;1];  %change to 1e7 to ignore
+maxLeverPossible=[1.5;1;1.5];  %change to 1e7 to ignore
+minLeverPossible=[0 -.2 -.25];
 
 Sk=[]; nuj=[]; xkp1=x0; Pkp1=Pk; Limu=L0; RBI_out=RBI0;
 
@@ -57,7 +58,7 @@ if numImuMeas>1
     Pkp1 = Pbar - Pxz*inv(Pzz)*Pxz';
     
     %TESTING: Saturation limit for known bounds
-    %xkp1(16:18) = vectorSaturationF(xkp1(16:18),maxLeverPossible);
+    %xkp1(16:18) = vectorSaturationF(xkp1(16:18),minLeverPossible, maxLeverPossible);
     [xkp1,RBI_out]=updateRBI(xkp1,RR);
 end
 

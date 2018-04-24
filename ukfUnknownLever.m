@@ -5,7 +5,7 @@ function [xkp1,Pkp1,RBI_out] = ukfUnknownLever(x0,Pk,imuMeas,gpsMeas,L0,systemPa
 
 %gpsMeas is [t0;gps1;gps2];
 
-maxLeverPossible=[1;1;1];  %change to 1e7 to ignore
+maxLeverPossible=[1.5;1;1];  %change to 1e7 to ignore
 
 Sk=[]; nuj=[]; xkp1=x0; Pkp1=Pk; Limu=L0; RBI_out=RBI0;
 
@@ -49,14 +49,15 @@ if numImuMeas>1
     %Gammak: note that accel noise enters in body, not world, frame
     
     zk=[gpsMeas{1}(2:4); unit3(gpsMeas{1}(5:7)-gpsMeas{1}(2:4))];  %pose meas in local frame
+    %zk=[gpsMeas{1}(2:4)];
     Rk=.0002*[eye3 zer3; zer3 eye3];
     [zbar,Pxz,Pzz]=ukfMeasure(xbar,Pbar,Rk,RR,L_cg2p,L_s2p);
-    nuj = zk-zbar
+    nuj = zk-zbar;
     xkp1 = xbar+Pxz*inv(Pzz)*nuj;
     Pkp1 = Pbar - Pxz*inv(Pzz)*Pxz';
     
     %TESTING: Saturation limit for known bounds
-    %biasState(16:18) = vectorSaturationF(biasState(16:18),maxLeverPossible);
+    %xkp1(16:18) = vectorSaturationF(xkp1(16:18),maxLeverPossible);
     [xkp1,RBI_out]=updateRBI(xkp1,RR);
 end
 

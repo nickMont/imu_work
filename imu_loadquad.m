@@ -1,7 +1,7 @@
 clear all;clc;
 % Generates and samples IMU data
 
-rng(10)
+rng(87)
 
 runStateAug=1;
 runMMAE=0;

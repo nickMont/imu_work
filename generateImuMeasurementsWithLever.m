@@ -47,11 +47,11 @@ for ij=1:length(timu_ind)
     wB=this_ewxv(13:15);
     grav=[0;0;9.81];
    
-    outputNoise = zeros(6,1);
-    %outputNoise = cholRout*randn(6,1);
+    %outputNoise = zeros(6,1);
+    outputNoise = cholRout*randn(6,1);
     
     alphaCrossL = cross(this_ewxv(16:18),L_ab);
-    alphaCrossL = zeros(3,1);
+    %alphaCrossL = zeros(3,1);
     wBxwBxL = cross(wB,cross(wB,L_ab));
     
     %combine bias and ewxvDot

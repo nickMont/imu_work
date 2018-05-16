@@ -1,4 +1,5 @@
 function [xbarkp1,Pbarkp1] = ukfPropagate(dt,xk,Pk,Qk, RBI0,fB,wB,tauA,tauG)
+%Unknown lever arm
 
 nx = length(xk);
 [~,nv] = size(Qk);

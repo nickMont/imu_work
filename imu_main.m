@@ -1,10 +1,10 @@
 clear all;clc;
 % Generates and samples IMU data
 
-rng(10)
+rng(87)
 
-runStateAug=1;
-runMMAE=0;
+runStateAug=0;
+runMMAE=1;
 %discSize=0.75; %discretization size for MMAE
 
 % GPS/INS sampling frequencies
@@ -191,7 +191,6 @@ legend('\delta l_x','\delta l_y','\delta l_z')
 axis([0 20 -1.5 1.5])
 xlabel('Time (s)')
 ylabel('Error (m)')
-title('Lever arm estimation error with state augmentation')
 grid on
 figset
 end
@@ -204,7 +203,7 @@ mu_min=1e-8;
 %leverSet=permn(-1:discSize:1,3);
 %leverSet=[-2 -2 -2;1 .5 .2];
 %numLevers=length(leverSet);
-leverSet=(Lab_true*([0.7:.05:1.3]))';
+leverSet=(Lab_true*( 0.7:.05:1.3 ))';
 [numLevers,~]=size(leverSet);
 stateSet=zeros(15,numLevers);
 PkSet=zeros(15,15,numLevers);
@@ -249,7 +248,7 @@ for ij=1:nmax
     if max(max(isnan(muTest)))>0.1
         error('isnan')
     end
-    muPrev=muTest
+    muPrev=muTest;
      
     mukhist(:,ij)=muPrev;
     L=zeros(3,1);
@@ -275,14 +274,12 @@ legend('\delta l_x','\delta l_y','\delta l_z')
 axis([0 20 -1.5 1.5])
 xlabel('Time (s)')
 ylabel('Error (m)')
-title('Lever arm estimation error with IMMEKF (10cm discretization)')
 grid on
 figset
 end
 
 
 % figure(2);clf;
-% pli=1:1:length(leverEst);
 % hold on
 % plot(thist0,xhist_init(:,1),':r')
 % hold on
@@ -293,18 +290,44 @@ end
 % xlabel('Time (s)')
 % ylabel('Position (m)')
 % legend('x','y','z')
-% 
+% figset
+% % 
 % figure(3);clf;
-% pli=1:1:length(leverEst);
 % hold on
 % plot(thist0,ehist_init(:,1),':r')
 % hold on
-% plot(thist0,ehist_init(:,2),'--b')
+% plot(thist0,5*ehist_init(:,2),'--b')
 % hold on
-% plot(thist0,ehist_init(:,3),'-g')
+% plot(thist0,5*ehist_init(:,3),'-g')
 % hold on
 % xlabel('Time (s)')
 % ylabel('Attitude (radians)')
-% legend('Roll','Pitch','Yaw')
-
-
+% legend('Roll','5x Pitch','5x Yaw')
+% figset
+% 
+% figure(4);clf;
+% hold on
+% plot(thist,vhist(:,1),':r')
+% hold on
+% plot(thist,vhist(:,2),'--b')
+% hold on
+% plot(thist,vhist(:,3),'-g')
+% hold on
+% xlabel('Time (s)')
+% ylabel('Velocity (m/s)')
+% legend('v_x','v_y','v_z')
+% axis([0 20 -1 1])
+% figset
+% % 
+% figure(5);clf;
+% hold on
+% plot(thist,omegaBhist(:,1),':r')
+% hold on
+% plot(thist,5*omegaBhist(:,2),'--b')
+% hold on
+% plot(thist,5*omegaBhist(:,3),'-g')
+% hold on
+% xlabel('Time (s)')
+% ylabel('Attitude (rad/s)')
+% legend('\omega_{roll}','5x \omega_{pitch}','5x \omega_{yaw}')
+% figset
